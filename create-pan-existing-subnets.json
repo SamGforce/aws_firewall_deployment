@@ -1,0 +1,452 @@
+{
+  "Description": "Create Palo Alto VM Series with custom subnets",
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Metadata": {
+    "Author": "Sam Ghardashem Aviatrix  Systems",
+    "Version": "1",
+    "Version Notes": "",
+    "Verified Date": "2/29/2019",
+    "Comments": "",
+    "AWS::CloudFormation::Interface" : {
+      "ParameterGroups" : [
+        {
+          "Label" : { "default" : "Firewall Configuration" },
+          "Parameters" : [ "SelectVPC","SourceNet","FWInstanceSize","SSHKeyPair"]
+        },
+        {
+          "Label" : { "default" : "Interface and Subnets" },
+          "Parameters" : [  "deployHA","FW1Eth0Subnet","FW1Eth1Subnet","FW1Eth2Subnet","FW1Eth3Subnet"]
+        }
+      ],
+      "ParameterLabels" : {
+        "SelectVPC" : { "default" : "Select VPC" },
+        "FWInstanceSize":{ "default" : "FW Instance Size"},
+        "FW1Eth0Secgroup":{"default" : "FW Eth0 Security Group"}, 
+        "FW1Eth0Subnet": {"default" : "FA Management Subnet"},
+        "FW1Eth1Subnet": {"default": "FW Eth1 Subnet"},
+        "FW1Eth2Subnet": {"default": "FW Eth2 Subnet"},
+        "FW1Eth3Subnet": {"default": "FW Eth3 Subnet"},
+        "FWInstanceAMI": {"default" : "Firewall AMI" },
+        "deployHA": {"default" : "Deploy HA FW?"    },   
+        "SourceNet":{"default" : "Specify your public IP"},
+        "SSHKeyPair": {"default": "SSH Keypair to Use"}
+      }
+    }
+  },
+    "Mappings": {
+        "vBladePerformanceMap" : {
+              "High" : { "InstanceType" : "c4.4xlarge"},
+              "Med" : { "InstanceType" : "r4.4xlarge"}
+        },
+        "ControllerPerformanceMap" : {
+              "High" : { "InstanceType" : "m4.2xlarge"},
+              "Med" : { "InstanceType" : "m4.xlarge"}
+        }
+    },
+  "Parameters": {
+    "SelectVPC": {
+      "Type": "AWS::EC2::VPC::Id",
+      "AllowedPattern": ".+",
+      "Description": "Please select VPC"
+    },
+    "deployHA": {
+      "Type": "String",
+      "Default": "Yes",
+      "AllowedValues": [
+        "Yes",
+        "No"
+      ],
+      "Description": ""
+    }, 
+    "FWInstanceAMI": {
+      "Type": "String",
+      "Default": "t2.large",
+      "AllowedValues": [
+        "t2.medium",
+        "t2.large",
+        "m4.xlarge",
+        "m4.2xlarge"
+      ],
+      "Description": ""
+    },
+    "SourceNet": {
+      "Type": "String",
+      "Description": "This specificies the network address that's allowed to talk to FW's management subnet. If not available, it will default to 0.0.0.0/0",
+      "Default": "0.0.0.0/0"
+    },    
+    "FWInstanceSize": {
+      "Type": "String",
+      "Default": "m4.xlarge",
+      "AllowedValues": [
+        "m4.xlarge",
+        "m4.2xlarge",
+        "m4.4xlarge",
+        "m4.8xlarge"
+      ],
+      "Description": "Instance type for Firewall."
+    }, 
+    "SSHKeyPair": {
+      "Type": "AWS::EC2::KeyPair::KeyName",
+      "Description": "***IMPORTANT*** An Amazon EC2 Key Pair is required to gain SSH access to your FW instances after they are created. Choose one of your existing Key Pairs from the drop-down. If you don't already have a Key Pair, please create one and reload the template",
+      "AllowedPattern": ".+"
+    },
+    "User": {
+      "Default": "CloudUser",
+      "Description": "Please specify a simple username that will be used for tagging instances",
+      "Type": "String"
+    },
+    "FW1Eth0Secgroup": {
+      "Description": "Security Group",
+      "Type": "AWS::EC2::SecurityGroup::GroupName"
+    },
+    "FW1Eth0Subnet": {
+      "Description": "Subnet for Interface 1",
+      "Type": "AWS::EC2::Subnet::Id",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "Subnet must be selecte"
+    },
+    "FW1Eth1Subnet": {
+      "Description": "Subnet for Interface 2",
+      "Type": "AWS::EC2::Subnet::Id",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "Subnet must be selecte"
+    },
+    "FW1Eth2Subnet": {
+      "Description": "Subnet for Interface 3",
+      "Type": "AWS::EC2::Subnet::Id",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "Subnet must be selecte"
+    },
+    "FW1Eth3Subnet": {
+      "Description": "Subnet for Interface 4",
+      "Type": "AWS::EC2::Subnet::Id",
+      "AllowedPattern": ".+",
+      "ConstraintDescription": "Subnet must be selecte"
+    }
+  },
+  "Conditions": {
+    "BPSPerformanceSelectionHigh": {
+        "Fn::Equals" : [{"Ref" : "deployHA"}, "Yes"]
+    }
+  },
+  "Resources": {
+    "FW1Eth0": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "Properties": {
+        "Description": "FW1 Eth0",
+        "SubnetId": {
+          "Ref": "FW1Eth0Subnet"
+        },
+        "GroupSet": [
+          {
+            "Ref": "FW1Eth0Secgroup"
+          }
+        ],
+        "Tags": [
+          {
+            "Key": "StackName",
+            "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "User"
+            }
+          }
+        ]
+      }
+    },
+    "FW1Eth1": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "Properties": {
+        "Description": "FW1 Eth1",
+        "SourceDestCheck": false,
+        "SubnetId": {
+          "Ref": "FW1Eth1Subnet"
+        },
+        "Tags": [
+          {
+            "Key": "StackName",
+            "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "User"
+            }
+          }
+        ]
+      }
+    },
+    "FW1Eth2": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "Properties": {
+        "Description": "FW1 Eth2",
+        "SourceDestCheck": false,
+        "SubnetId": {
+          "Ref": "FW1Eth2Subnet"
+        },
+        "Tags": [
+          {
+            "Key": "StackName",
+            "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "User"
+            }
+          }
+        ]
+      }
+    },
+    "FW1Instance": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "DisableApiTermination": "false",
+        "InstanceInitiatedShutdownBehavior": "stop",
+        "ImageId": "ami-ce01c0b3",
+        "InstanceType": {
+          "Ref": "FWInstanceSize"
+        },
+        "KeyName": {
+          "Ref": "SSHKeyPair"
+        },
+        "Monitoring": "false",
+        "Tags": [
+          {
+            "Key": "CloudLensFlag",
+            "Value": "Tool"
+          },
+          {
+            "Key": "CloudLensEnabled",
+            "Value": "True"
+          },
+          {
+            "Key": "ToolType",
+            "Value": "Eastwind"
+          },
+          {
+            "Key": "Name",
+            "Value": "EW-Sensor"
+          },
+          {
+            "Key": "StackName",
+            "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Owner",
+            "Value": {
+              "Ref": "User"
+            }
+          }
+        ],
+        "NetworkInterfaces": [
+          {
+            "DeleteOnTermination": "true",
+            "Description": "Primary network interface for managmetn access",
+            "DeviceIndex": 0,
+            "SubnetId": {
+              "Ref": "FW1Eth0Subnet"
+            },
+            "GroupSet": [
+              {
+                "Ref": "FW1Eth0Secgroup"
+              }
+            ],
+            "AssociatePublicIpAddress": "true"
+          }
+        ]
+      }
+    },
+    "elasticIP1": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "SelectVPC"
+      }
+    },
+    "elasticIP2": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "SelectVPC"
+      }
+    },
+    "elasticIP3": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+      "Domain": "SelectVPC"
+      }
+    },
+    "FW1Eth0EIPassoc": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "elasticIP1",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {
+          "Ref": "FW1Eth0"
+        }
+      },
+      "DependsOn": [
+        "FW1Eth0"
+      ]
+    },
+    "FW2Eth0EIPassoc": {
+      "Type": "AWS::EC2::EIPAssociation",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "elasticIP2",
+            "AllocationId"
+          ]
+        },
+        "NetworkInterfaceId": {
+          "Ref": "FW1Eth1"
+        }
+      }
+    },
+  "FWMgmtSG": {
+    "Type": "AWS::EC2::SecurityGroup",
+    "Properties": {
+      "GroupDescription": "Opens ports needed FW Management",
+      "VpcId": {
+        "Ref": "SelectVPC"
+      }
+    }
+  },
+  "FWInternalSG": {
+    "Type": "AWS::EC2::SecurityGroup",
+    "Properties": {
+      "GroupDescription": "Opens ports needed FW Management",
+      "VpcId": {
+        "Ref": "SelectVPC"
+      }
+    }
+  },
+  "FWEgressSG": {
+    "Type": "AWS::EC2::SecurityGroup",
+    "Properties": {
+      "GroupDescription": "Opens ports needed FW Management",
+      "VpcId": {
+        "Ref": "SelectVPC"
+      }
+    }
+  },
+  "FWMgmtSGingress1": {
+    "Type": "AWS::EC2::SecurityGroupIngress",
+    "Properties": {
+      "GroupId": {
+        "Ref": "FWMgmtSG"
+      },
+      "IpProtocol": "tcp",
+      "FromPort": "22",
+      "ToPort": "22",
+      "CidrIp": {
+        "Ref": "SourceNet"
+      }
+    }
+  },
+  "FWMgmtSGingress2": {
+    "Type": "AWS::EC2::SecurityGroupIngress",
+    "Properties": {
+      "GroupId": {
+        "Ref": "FWMgmtSG"
+      },
+      "IpProtocol": "tcp",
+      "FromPort": "443",
+      "ToPort": "443",
+      "CidrIp": "0.0.0.0/0"
+    }
+  },
+    "FWInternalSGingress1": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "FWInternalSG"
+        },
+        "IpProtocol": "-1",
+        "CidrIp": "10.0.0.0/8"
+      }
+    },
+      "FWInternalSGingress2": {
+        "Type": "AWS::EC2::SecurityGroupIngress",
+        "Properties": {
+          "GroupId": {
+            "Ref": "FWInternalSG"
+          },
+          "IpProtocol": "-1",
+          "CidrIp": "172.16.0.0/12"
+        }
+      },
+        "FWInternalSGingress3": {
+          "Type": "AWS::EC2::SecurityGroupIngress",
+          "Properties": {
+            "GroupId": {
+              "Ref": "FWInternalSG"
+            },
+            "IpProtocol": "-1",
+            "CidrIp": "192.168.0.0/12"
+          }
+        },
+          "FWEgressSGingress1": {
+            "Type": "AWS::EC2::SecurityGroupIngress",
+            "Properties": {
+              "GroupId": {
+                "Ref": "FWEgressSG"
+              },
+              "IpProtocol": "-1",
+              "CidrIp": "0.0.0.0/0"
+            }
+          },
+          "FWEgressSGEgress1": {
+            "Type": "AWS::EC2::SecurityGroupEgress",
+            "Properties": {
+              "GroupId": {
+                "Ref": "FWEgressSG"
+              },
+              "IpProtocol": "-1",
+              "CidrIp": "0.0.0.0/0"
+            }
+          }
+        },
+  "Outputs": {
+    "FW1ManagementIP": { 
+      "Description": "IP of BPS UI",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Fn::GetAtt": [
+                "FW1Instance",
+                "PublicDnsName"
+              ]
+            }
+          ]
+        ]
+      }
+    },
+    "FW2ManagementIP": {
+      "Description": "Link To access NTOP Instance",
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "http://",
+            {
+              "Fn::GetAtt": [
+                "FW1Instance",
+                "PublicIp"
+              ]
+            },
+            ":3000"
+          ]
+        ]
+      }
+    }
+  }
+}
