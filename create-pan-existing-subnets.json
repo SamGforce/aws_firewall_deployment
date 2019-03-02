@@ -21,19 +21,18 @@
       "ParameterLabels" : {
         "SelectVPC" : { "default" : "Select VPC" },
         "FWInstanceSize":{ "default" : "FW Instance Size"},
-        "FW1Eth0Secgroup":{"default" : "FW Eth0 Security Group"}, 
-        "FW1Eth0Subnet": {"default" : "FA Management Subnet"},
-        "FW1Eth1Subnet": {"default": "FW Eth1 Subnet"},
-        "FW1Eth2Subnet": {"default": "FW Eth2 Subnet"},
-        "FW1Eth3Subnet": {"default": "FW Eth3 Subnet"},
-        "FWInstanceAMI": {"default" : "Firewall AMI" },
-        "deployHA": {"default" : "Deploy HA FW?"    },   
+        "FW1Eth0Subnet": {"default" : "FW Management Subnet"},
+        "FW1Eth1Subnet": {"default": "FW Eth1 Subnet(North)"},
+        "FW1Eth2Subnet": {"default": "FW Eth2 Subnet(South)"},
+        "FW1Eth3Subnet": {"default": "FW Eth3 Subnet(Egress and Ingress"},
+        "FWInstanceAMI": {"default" : "Firewall AMI. Defaults to AMI in us-east-2" },
+        "deployHA": {"default" : "Deploy HA FW?. *Experimental"    },   
         "SourceNet":{"default" : "Specify your public IP"},
         "SSHKeyPair": {"default": "SSH Keypair to Use"}
       }
     }
   },
-    "Mappings": {
+  "Mappings": {
         "vBladePerformanceMap" : {
               "High" : { "InstanceType" : "c4.4xlarge"},
               "Med" : { "InstanceType" : "r4.4xlarge"}
@@ -41,8 +40,14 @@
         "ControllerPerformanceMap" : {
               "High" : { "InstanceType" : "m4.2xlarge"},
               "Med" : { "InstanceType" : "m4.xlarge"}
+        },
+        "AMIRegionMap" : {
+          "us-east-1"      : { "HVM64" : "ami-ce01c0b3"},
+          "us-east-2"      : { "HVM64" : "ami-10f3c575"},
+          "us-west-1"      : { "HVM64" : "ami-235b4f43"},
+          "us-west-2"      : { "HVM64" : "ami-8a22b3f2"}
         }
-    },
+      },
   "Parameters": {
     "SelectVPC": {
       "Type": "AWS::EC2::VPC::Id",
@@ -60,14 +65,9 @@
     }, 
     "FWInstanceAMI": {
       "Type": "String",
-      "Default": "t2.large",
-      "AllowedValues": [
-        "t2.medium",
-        "t2.large",
-        "m4.xlarge",
-        "m4.2xlarge"
-      ],
-      "Description": ""
+      "AllowedPattern": ".+",
+      "Description": "Provide the Firewall AMI from Marketplace",
+      "Default":"ami-0ceaa612d0b411526"
     },
     "SourceNet": {
       "Type": "String",
@@ -94,10 +94,6 @@
       "Default": "CloudUser",
       "Description": "Please specify a simple username that will be used for tagging instances",
       "Type": "String"
-    },
-    "FW1Eth0Secgroup": {
-      "Description": "Security Group",
-      "Type": "AWS::EC2::SecurityGroup::GroupName"
     },
     "FW1Eth0Subnet": {
       "Description": "Subnet for Interface 1",
@@ -139,7 +135,7 @@
         },
         "GroupSet": [
           {
-            "Ref": "FW1Eth0Secgroup"
+            "Ref": "FWMgmtSG"
           }
         ],
         "Tags": [
@@ -148,7 +144,7 @@
             "Value": {"Ref" : "AWS::StackName"}
           },
           {
-            "Key": "Owner",
+            "Key": "Creator",
             "Value": {
               "Ref": "User"
             }
@@ -170,7 +166,7 @@
             "Value": {"Ref" : "AWS::StackName"}
           },
           {
-            "Key": "Owner",
+            "Key": "Creator",
             "Value": {
               "Ref": "User"
             }
@@ -192,7 +188,29 @@
             "Value": {"Ref" : "AWS::StackName"}
           },
           {
-            "Key": "Owner",
+            "Key": "Creator",
+            "Value": {
+              "Ref": "User"
+            }
+          }
+        ]
+      }
+    },
+    "FW1Eth3": {
+      "Type": "AWS::EC2::NetworkInterface",
+      "Properties": {
+        "Description": "FW1 Eth2",
+        "SourceDestCheck": false,
+        "SubnetId": {
+          "Ref": "FW1Eth3Subnet"
+        },
+        "Tags": [
+          {
+            "Key": "StackName",
+            "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Creator",
             "Value": {
               "Ref": "User"
             }
@@ -228,14 +246,14 @@
           },
           {
             "Key": "Name",
-            "Value": "EW-Sensor"
+            "Value": "DMZ-Firewall-1"
           },
           {
             "Key": "StackName",
             "Value": {"Ref" : "AWS::StackName"}
           },
           {
-            "Key": "Owner",
+            "Key": "Creator",
             "Value": {
               "Ref": "User"
             }
@@ -243,19 +261,30 @@
         ],
         "NetworkInterfaces": [
           {
-            "DeleteOnTermination": "true",
-            "Description": "Primary network interface for managmetn access",
-            "DeviceIndex": 0,
-            "SubnetId": {
-              "Ref": "FW1Eth0Subnet"
+            "NetworkInterfaceId": {
+              "Ref": "FW1Eth0"
             },
-            "GroupSet": [
-              {
-                "Ref": "FW1Eth0Secgroup"
-              }
-            ],
-            "AssociatePublicIpAddress": "true"
+            "DeviceIndex": "0"
+          },
+          {
+            "NetworkInterfaceId": {
+              "Ref": "FW1Eth1"
+            },
+            "DeviceIndex": "1"
+          },
+          {
+            "NetworkInterfaceId": {
+              "Ref": "FW1Eth2"
+            },
+            "DeviceIndex": "2"
+          },
+          {
+            "NetworkInterfaceId": {
+              "Ref": "FW1Eth3"
+            },
+            "DeviceIndex": "3"
           }
+
         ]
       }
     },
@@ -291,7 +320,7 @@
         }
       },
       "DependsOn": [
-        "FW1Eth0"
+        "FW1Instance"
       ]
     },
     "FW2Eth0EIPassoc": {
@@ -426,24 +455,6 @@
                 "PublicDnsName"
               ]
             }
-          ]
-        ]
-      }
-    },
-    "FW2ManagementIP": {
-      "Description": "Link To access NTOP Instance",
-      "Value": {
-        "Fn::Join": [
-          "",
-          [
-            "http://",
-            {
-              "Fn::GetAtt": [
-                "FW1Instance",
-                "PublicIp"
-              ]
-            },
-            ":3000"
           ]
         ]
       }
