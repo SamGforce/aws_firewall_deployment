@@ -39,7 +39,8 @@
         },
         "ControllerPerformanceMap" : {
               "High" : { "InstanceType" : "m4.2xlarge"},
-              "Med" : { "InstanceType" : "m4.xlarge"}
+              "Med" : { "InstanceType" : "m4.xlarge"},
+
         },
         "AMIRegionMap" : {
           "us-east-1"      : { "HVM64" : "ami-ce01c0b3"},
@@ -81,7 +82,13 @@
         "m4.xlarge",
         "m4.2xlarge",
         "m4.4xlarge",
-        "m4.8xlarge"
+        "m4.10xlarge",
+        "c5.large",
+        "c5.xlarge",
+        "c5.2xlarge",
+        "c5.4xlarge",
+        "c5.18xlarge"
+
       ],
       "Description": "Instance type for Firewall."
     }, 
@@ -160,6 +167,11 @@
         "SubnetId": {
           "Ref": "FW1Eth1Subnet"
         },
+        "GroupSet": [
+          {
+            "Ref": "FWInternalSG"
+          }
+        ],
         "Tags": [
           {
             "Key": "StackName",
@@ -182,6 +194,11 @@
         "SubnetId": {
           "Ref": "FW1Eth2Subnet"
         },
+        "GroupSet": [
+          {
+            "Ref": "FWInternalSG"
+          }
+        ],
         "Tags": [
           {
             "Key": "StackName",
@@ -204,6 +221,11 @@
         "SubnetId": {
           "Ref": "FW1Eth3Subnet"
         },
+        "GroupSet": [
+          {
+            "Ref": "FWEgressSG"
+          }
+        ],
         "Tags": [
           {
             "Key": "StackName",
@@ -323,7 +345,7 @@
         "FW1Instance"
       ]
     },
-    "FW2Eth0EIPassoc": {
+    "FW1Eth3EIPassoc": {
       "Type": "AWS::EC2::EIPAssociation",
       "Properties": {
         "AllocationId": {
@@ -333,7 +355,7 @@
           ]
         },
         "NetworkInterfaceId": {
-          "Ref": "FW1Eth1"
+          "Ref": "FW1Eth3"
         }
       }
     },
