@@ -268,7 +268,13 @@
           },
           {
             "Key": "Name",
-            "Value": "DMZ-Firewall-1"
+            "Value": {"Fn::Join": [
+                  "",
+                  [    {"Ref" : "AWS::StackName"},
+                  "Firewall"
+                  ]
+            ]
+          }
           },
           {
             "Key": "StackName",
