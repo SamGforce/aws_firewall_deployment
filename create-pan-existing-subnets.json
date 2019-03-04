@@ -11,7 +11,7 @@
       "ParameterGroups" : [
         {
           "Label" : { "default" : "Firewall Configuration" },
-          "Parameters" : [ "SelectVPC","SourceNet","FWInstanceSize","SSHKeyPair"]
+          "Parameters" : [ "fwName","SelectVPC","SourceNet","FWInstanceSize","SSHKeyPair"]
         },
         {
           "Label" : { "default" : "Interface and Subnets" },
@@ -28,7 +28,8 @@
         "FWInstanceAMI": {"default" : "Firewall AMI. Defaults to AMI in us-east-2" },
         "deployHA": {"default" : "Deploy HA FW?. *Experimental"    },   
         "SourceNet":{"default" : "Specify your public IP"},
-        "SSHKeyPair": {"default": "SSH Keypair to Use"}
+        "SSHKeyPair": {"default": "SSH Keypair to Use"},
+        "fwName":{"default":"Name of the Firewall Instance"}
       }
     }
   },
@@ -82,13 +83,14 @@
         "m4.xlarge",
         "m4.2xlarge",
         "m4.4xlarge",
-        "m4.10xlarge",
+        "c4.2xlarge",
+        "c4.4xlarge",
+        "c4.8xlarge",
         "c5.large",
         "c5.xlarge",
         "c5.2xlarge",
         "c5.4xlarge",
         "c5.18xlarge"
-
       ],
       "Description": "Instance type for Firewall."
     }, 
@@ -100,6 +102,11 @@
     "User": {
       "Default": "CloudUser",
       "Description": "Please specify a simple username that will be used for tagging instances",
+      "Type": "String"
+    },
+    "fwName": {
+      "Default": "DMZFirewall",
+      "Description": "Please specify a simple name that will be used for tagging instance's Name tag",
       "Type": "String"
     },
     "FW1Eth0Subnet": {
@@ -137,6 +144,7 @@
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
         "Description": "FW1 Eth0",
+        "SourceDestCheck": "false",
         "SubnetId": {
           "Ref": "FW1Eth0Subnet"
         },
@@ -199,6 +207,7 @@
             "Ref": "FWInternalSG"
           }
         ],
+        
         "Tags": [
           {
             "Key": "StackName",
@@ -245,7 +254,7 @@
       "Properties": {
         "DisableApiTermination": "false",
         "InstanceInitiatedShutdownBehavior": "stop",
-        "ImageId": "ami-ce01c0b3",
+        "ImageId": {"Ref":"FWInstanceAMI"},
         "InstanceType": {
           "Ref": "FWInstanceSize"
         },
@@ -253,7 +262,6 @@
           "Ref": "SSHKeyPair"
         },
         "Monitoring": "false",
-        "SourceDestCheck": "false",
         "Tags": [
           {
             "Key": "CloudLensFlag",
@@ -269,13 +277,7 @@
           },
           {
             "Key": "Name",
-            "Value": {"Fn::Join": [
-                  "",
-                  [    {"Ref" : "AWS::StackName"},
-                  "Firewall"
-                  ]
-            ]
-          }
+            "Value": {"Ref" : "fwName"}
           },
           {
             "Key": "StackName",
