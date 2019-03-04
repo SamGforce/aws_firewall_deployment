@@ -253,6 +253,7 @@
           "Ref": "SSHKeyPair"
         },
         "Monitoring": "false",
+        "SourceDestCheck": "false",
         "Tags": [
           {
             "Key": "CloudLensFlag",
