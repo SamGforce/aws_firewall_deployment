@@ -39,7 +39,7 @@
         },
         "ControllerPerformanceMap" : {
               "High" : { "InstanceType" : "m4.2xlarge"},
-              "Med" : { "InstanceType" : "m4.xlarge"},
+              "Med" : { "InstanceType" : "m4.xlarge"}
 
         },
         "AMIRegionMap" : {
