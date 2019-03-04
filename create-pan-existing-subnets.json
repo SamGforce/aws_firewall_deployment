@@ -439,7 +439,7 @@
               "Ref": "FWInternalSG"
             },
             "IpProtocol": "-1",
-            "CidrIp": "192.168.0.0/12"
+            "CidrIp": "192.168.0.0/16"
           }
         },
           "FWEgressSGingress1": {
