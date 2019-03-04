@@ -252,7 +252,7 @@
     "FW1Instance": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "DisableApiTermination": "false",
+        "DisableApiTermination": "true",
         "InstanceInitiatedShutdownBehavior": "stop",
         "ImageId": {"Ref":"FWInstanceAMI"},
         "InstanceType": {
