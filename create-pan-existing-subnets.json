@@ -1,12 +1,12 @@
 {
-  "Description": "Create Palo Alto VM Series with custom subnets",
+  "Description": "Create Firewall with 4 interfaces for Aviatrix DMZ",
   "AWSTemplateFormatVersion": "2010-09-09",
   "Metadata": {
     "Author": "Sam Ghardashem Aviatrix  Systems",
-    "Version": "1",
+    "Version": "1.9",
     "Version Notes": "",
-    "Verified Date": "2/29/2019",
-    "Comments": "",
+    "Verified Date": "3/4/2019",
+    "Comments": "This CFT Helps launch a firewall in subnets that are currently built. Security groups will be built accordingly",
     "AWS::CloudFormation::Interface" : {
       "ParameterGroups" : [
         {
