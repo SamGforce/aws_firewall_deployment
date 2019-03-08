@@ -252,7 +252,6 @@
     "FW1Instance": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "DisableApiTermination": "true",
         "InstanceInitiatedShutdownBehavior": "stop",
         "ImageId": {"Ref":"FWInstanceAMI"},
         "InstanceType": {
@@ -329,12 +328,6 @@
       "Type": "AWS::EC2::EIP",
       "Properties": {
         "Domain": "SelectVPC"
-      }
-    },
-    "elasticIP3": {
-      "Type": "AWS::EC2::EIP",
-      "Properties": {
-      "Domain": "SelectVPC"
       }
     },
     "FW1Eth0EIPassoc": {
