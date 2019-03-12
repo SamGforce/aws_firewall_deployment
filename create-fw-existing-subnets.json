@@ -159,6 +159,17 @@
             "Value": {"Ref" : "AWS::StackName"}
           },
           {
+            "Key": "Name",
+              "Value": {"Fn::Join": [
+              "_",
+              [
+                "FW-Management-Int",
+                {"Ref" : "AWS::StackName"}
+              ]
+            ]
+            }
+          },
+      {
             "Key": "Creator",
             "Value": {
               "Ref": "User"
@@ -184,6 +195,17 @@
           {
             "Key": "StackName",
             "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Name",
+              "Value": {"Fn::Join": [
+              "_",
+              [
+                "FW-North-Int",
+                {"Ref" : "AWS::StackName"}
+              ]
+            ]
+            }
           },
           {
             "Key": "Creator",
@@ -214,6 +236,17 @@
             "Value": {"Ref" : "AWS::StackName"}
           },
           {
+            "Key": "Name",
+              "Value": {"Fn::Join": [
+              "_",
+              [
+                "FW-South-Int",
+                {"Ref" : "AWS::StackName"}
+              ]
+            ]
+            }
+          },
+          {
             "Key": "Creator",
             "Value": {
               "Ref": "User"
@@ -225,7 +258,7 @@
     "FW1Eth3": {
       "Type": "AWS::EC2::NetworkInterface",
       "Properties": {
-        "Description": "FW1 Eth2",
+        "Description": "FW Egress",
         "SourceDestCheck": false,
         "SubnetId": {
           "Ref": "FW1Eth3Subnet"
@@ -239,6 +272,17 @@
           {
             "Key": "StackName",
             "Value": {"Ref" : "AWS::StackName"}
+          },
+          {
+            "Key": "Name",
+              "Value": {"Fn::Join": [
+              "_",
+              [
+                "FW-Egress-Int",
+                {"Ref" : "AWS::StackName"}
+              ]
+            ]
+            }
           },
           {
             "Key": "Creator",
@@ -367,8 +411,25 @@
       "GroupDescription": "Opens ports needed FW Management",
       "VpcId": {
         "Ref": "SelectVPC"
-      }
-    }
+      },
+      "Tags": [
+        {
+          "Key": "StackName",
+          "Value": {"Ref" : "AWS::StackName"}
+        },
+        {
+          "Key": "Name",
+          "Value": {"Fn::Join": [
+              "_",
+              [
+              {"Ref" : "AWS::StackName"},
+              "FW-Mgmt-ecurityGroup"
+              ]
+            ]
+          }
+        }
+      ]
+  }
   },
   "FWInternalSG": {
     "Type": "AWS::EC2::SecurityGroup",
@@ -376,7 +437,24 @@
       "GroupDescription": "Opens ports needed FW Management",
       "VpcId": {
         "Ref": "SelectVPC"
-      }
+      },
+      "Tags": [
+        {
+          "Key": "StackName",
+          "Value": {"Ref" : "AWS::StackName"}
+        },
+        {
+          "Key": "Name",
+          "Value": {"Fn::Join": [
+              "_",
+              [
+                {"Ref" : "AWS::StackName"},
+                "InternalSecurityGroup"
+              ]
+            ]
+          }
+        }
+      ]
     }
   },
   "FWEgressSG": {
@@ -385,7 +463,24 @@
       "GroupDescription": "Opens ports needed FW Management",
       "VpcId": {
         "Ref": "SelectVPC"
-      }
+      },
+      "Tags": [
+        {
+          "Key": "StackName",
+          "Value": {"Ref" : "AWS::StackName"}
+        },
+        {
+          "Key": "Name",
+          "Value": {"Fn::Join": [
+              "_",
+              [
+                {"Ref" : "AWS::StackName"},
+                "EgressSecurityGroup"
+              ]
+            ]
+          }
+        }
+      ]
     }
   },
   "FWMgmtSGingress1": {
